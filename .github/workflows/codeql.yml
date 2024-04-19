@@ -70,10 +70,10 @@ jobs:
       run: |
         mkdir -p $HOME/codeql
         cd $HOME/codeql
-        apt-get update -y
-        apt-get install unzip -y
+        sudo apt-get update -y
+        sudo apt-get install unzip -y
         wget https://github.com/github/codeql-cli-binaries/releases/download/v2.17.0/codeql-linux64.zip
-        unzip unzip codeql-linux64.zip
+        unzip codeql-linux64.zip
         cd codeql-linux64
         ./gradlew dev installDist --no-daemon --no-build-cache
         
