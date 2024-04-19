@@ -74,7 +74,7 @@ jobs:
         sudo apt-get install unzip -y
         wget https://github.com/github/codeql-cli-binaries/releases/download/v2.17.0/codeql-linux64.zip
         unzip codeql-linux64.zip
-        cd codeql-linux64
+        cd codeql
         ./gradlew dev installDist --no-daemon --no-build-cache
         
     #   uses: github/codeql-action/init@v2
