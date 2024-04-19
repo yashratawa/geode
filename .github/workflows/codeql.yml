@@ -40,7 +40,7 @@ on:
 jobs:
   analyze:
     name: Analyze
-    runs-on: self-hosted-s390x
+    runs-on: self-hosted
     env:
       GRADLE_ENTERPRISE_ACCESS_KEY: ${{ secrets.GE_ACCESS_TOKEN }}
     permissions:
