@@ -62,6 +62,7 @@ jobs:
       with:
         java-version: 8
         distribution: adopt
+        architecture: s390x
         cache: gradle
 
     # Download and install CodeQL CLI for s390x
