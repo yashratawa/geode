@@ -28,7 +28,7 @@ permissions:
 
 jobs:
   build:
-    runs-on: self-hosted
+    runs-on: ubuntu-latest
     env:
       GRADLE_ENTERPRISE_ACCESS_KEY: ${{ secrets.GE_ACCESS_TOKEN }}
     steps:
@@ -38,7 +38,6 @@ jobs:
       with:
         java-version: '8'
         distribution: 'liberica'
-        architecture: s390x
     - name: Run 'build install javadoc spotlessCheck rat checkPom resolveDependencies pmdMain' with Gradle
       uses: gradle/gradle-build-action@v2
       with:
@@ -86,7 +85,6 @@ jobs:
            -PtestJava11Home=${JAVA_HOME_11_X64} \
            -PtestJava17Home=${JAVA_HOME_17_X64} \
            japicmp --console=plain --no-daemon
-
   unitTest:
    needs: build
    strategy:
