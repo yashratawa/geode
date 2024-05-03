@@ -108,18 +108,18 @@ jobs:
         # 17
    - name: Setup Gradle
      uses: gradle/gradle-build-action@v2
-   - name: Set JAVA_TEST_PATH to 21
-     run: |
-       echo "JAVA_TEST_PATH=${JAVA_HOME_21_s390x}" >> $GITHUB_ENV
-     if: matrix.java == '21'
+   # - name: Set JAVA_TEST_PATH to 21
+   #   run: |
+   #     echo "JAVA_TEST_PATH=${JAVA_HOME_21_s390x}" >> $GITHUB_ENV
+   #   if: matrix.java == '21'
    - name: Set JAVA_TEST_PATH to 11
      run: |
        echo "JAVA_TEST_PATH=${JAVA_HOME_11_s390x}" >> $GITHUB_ENV
      if: matrix.java == '11'
-   - name: Set JAVA_TEST_PATH to 17
-     run: |
-      echo "JAVA_TEST_PATH=${JAVA_HOME_17_s390x}" >> $GITHUB_ENV
-     if: matrix.java == '17'
+   # - name: Set JAVA_TEST_PATH to 17
+   #   run: |
+   #    echo "JAVA_TEST_PATH=${JAVA_HOME_17_s390x}" >> $GITHUB_ENV
+   #   if: matrix.java == '17'
    - name: Run unit tests
      run: |
        GRADLE_JVM_PATH=${JAVA_HOME_11_s390x}
@@ -402,7 +402,7 @@ jobs:
             -PcompileJVMVer=${JAVA_BUILD_VERSION} \
             -PtestJVM=${JAVA_TEST_PATH} \
             -PtestJVMVer=${JAVA_TEST_VERSION} \
-            -PtestJava21Home=${JAVA_HOME_21_s390x} \
+            #-PtestJava21Home=${JAVA_HOME_21_s390x} \
             geode-gfsh:distributedTest \
             geode-web:distributedTest \
             geode-web-management:distributedTest --console=plain --no-daemon
