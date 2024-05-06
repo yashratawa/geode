@@ -41,7 +41,7 @@ jobs:
     - name: Run 'build install javadoc spotlessCheck rat checkPom pmdMain' with Gradle
       uses: gradle/gradle-build-action@v2
       with:
-        arguments: --console=plain --no-daemon build install javadoc spotlessCheck rat checkPom resolveDependencies pmdMain -x test
+        arguments: --debug --console=plain --no-daemon build install javadoc spotlessCheck rat checkPom resolveDependencies pmdMain -x test
 
   apiCheck:
      needs: build
@@ -65,8 +65,7 @@ jobs:
            #17
            #21
      - name: Set JAVA_TEST_PATH to 11
-       run: |
-         ./gradlew build --warning-mode all
+       run: | 
          echo "JAVA_TEST_PATH=${JAVA_HOME_11_s390x}" >> $GITHUB_ENV
        if: matrix.java == '11'
      - name: Java API Check
