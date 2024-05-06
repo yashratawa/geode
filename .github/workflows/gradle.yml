@@ -66,6 +66,7 @@ jobs:
            #21
      - name: Set JAVA_TEST_PATH to 11
        run: |
+         ./gradlew build --warning-mode all
          echo "JAVA_TEST_PATH=${JAVA_HOME_11_s390x}" >> $GITHUB_ENV
        if: matrix.java == '11'
      - name: Java API Check
