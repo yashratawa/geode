@@ -41,7 +41,7 @@ jobs:
     - name: Run 'build install javadoc spotlessCheck rat checkPom pmdMain' with Gradle
       uses: gradle/gradle-build-action@v2
       with:
-        arguments: --debug --console=plain --no-daemon build install javadoc spotlessCheck rat checkPom resolveDependencies pmdMain -x test
+        arguments: --console=plain --no-daemon build install javadoc spotlessCheck rat checkPom resolveDependencies pmdMain -x test
 
   apiCheck:
      needs: build
