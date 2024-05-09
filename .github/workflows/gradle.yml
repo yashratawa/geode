@@ -33,23 +33,23 @@ jobs:
       GRADLE_ENTERPRISE_ACCESS_KEY: ${{ secrets.GE_ACCESS_TOKEN }}
     steps:
     - uses: actions/checkout@v3
-    - name: Set up JDK 11
+    - name: Set up JDK 8
       uses: actions/setup-java@v3
       with:
-        java-version: '11'
+        java-version: '8'
         distribution: 'temurin'
-    - name: Run 'build install javadoc spotlessCheck rat checkPom pmdMain' with Gradle
+    - name: Run 'build install javadoc spotlessCheck rat checkPom resolveDependencies pmdMain' with Gradle
       uses: gradle/gradle-build-action@v2
       with:
-        arguments: --warning-mode all --console=plain --no-daemon build install javadoc spotlessCheck rat checkPom resolveDependencies pmdMain
-        #arguments: --console=plain --no-daemon build spotlessCheck resolveDependencies pmdMain
+        arguments: --console=plain --no-daemon build install javadoc spotlessCheck rat checkPom resolveDependencies pmdMain -x test
+
   apiCheck:
      needs: build
      strategy:
        fail-fast: false
        matrix:
-         os: [self-hosted]
-         distribution: [ 'temurin' ]
+         os: [ubuntu-latest]
+         distribution: [ 'liberica' ]
          java: ['11']
      runs-on: ${{ matrix.os }}
      env:
@@ -61,18 +61,18 @@ jobs:
        with:
          distribution: ${{ matrix.distribution }}
          java-version: |
+           8
            11
-           #17
-           #21
+           17
      - name: Set JAVA_TEST_PATH to 11
-       run: | 
-         echo "JAVA_TEST_PATH=${JAVA_HOME_11_s390x}" >> $GITHUB_ENV
+       run: |
+         echo "JAVA_TEST_PATH=${JAVA_HOME_11_X64}" >> $GITHUB_ENV
        if: matrix.java == '11'
      - name: Java API Check
        run: |
-         GRADLE_JVM_PATH=${JAVA_HOME_11_s390x}
-         JAVA_BUILD_PATH=${JAVA_HOME_11_s390x}
-         JAVA_BUILD_VERSION=11 # Use jdk 21 for build
+         GRADLE_JVM_PATH=${JAVA_HOME_8_X64}
+         JAVA_BUILD_PATH=${JAVA_HOME_8_X64}
+         JAVA_BUILD_VERSION=8 # Use jdk 8 for build
          JAVA_TEST_VERSION=${{ matrix.java }}
          cp gradlew gradlewStrict
          sed -e 's/JAVA_HOME/GRADLE_JVM/g' -i.back gradlewStrict
@@ -81,18 +81,19 @@ jobs:
            -PcompileJVMVer=${JAVA_BUILD_VERSION} \
            -PtestJVM=${JAVA_TEST_PATH} \
            -PtestJVMVer=${JAVA_TEST_VERSION} \
-           #-PtestJava21Home=${JAVA_HOME_21_s390x} \
-           -PtestJava11Home=${JAVA_HOME_11_s390x} \
-           #-PtestJava17Home=${JAVA_HOME_17_s390x} \
+           -PtestJava8Home=${JAVA_HOME_8_X64} \
+           -PtestJava11Home=${JAVA_HOME_11_X64} \
+           -PtestJava17Home=${JAVA_HOME_17_X64} \
            japicmp --console=plain --no-daemon
+
   unitTest:
    needs: build
    strategy:
      fail-fast: false
      matrix:
-       os: [self-hosted]
-       distribution: ['temurin']
-       java: ['11']
+       os: [ubuntu-latest]
+       distribution: ['liberica']
+       java: ['8', '11', '17']
    runs-on: ${{ matrix.os }}
    env:
      GRADLE_ENTERPRISE_ACCESS_KEY: ${{ secrets.GE_ACCESS_TOKEN }}
@@ -103,28 +104,28 @@ jobs:
      with:
        distribution: ${{ matrix.distribution }}
        java-version: |
-        # 21
+         8
          11
-        # 17
+         17
    - name: Setup Gradle
      uses: gradle/gradle-build-action@v2
-   # - name: Set JAVA_TEST_PATH to 21
-   #   run: |
-   #     echo "JAVA_TEST_PATH=${JAVA_HOME_21_s390x}" >> $GITHUB_ENV
-   #   if: matrix.java == '21'
+   - name: Set JAVA_TEST_PATH to 8
+     run: |
+       echo "JAVA_TEST_PATH=${JAVA_HOME_8_X64}" >> $GITHUB_ENV
+     if: matrix.java == '8'
    - name: Set JAVA_TEST_PATH to 11
      run: |
-       echo "JAVA_TEST_PATH=${JAVA_HOME_11_s390x}" >> $GITHUB_ENV
+       echo "JAVA_TEST_PATH=${JAVA_HOME_11_X64}" >> $GITHUB_ENV
      if: matrix.java == '11'
-   # - name: Set JAVA_TEST_PATH to 17
-   #   run: |
-   #    echo "JAVA_TEST_PATH=${JAVA_HOME_17_s390x}" >> $GITHUB_ENV
-   #   if: matrix.java == '17'
+   - name: Set JAVA_TEST_PATH to 17
+     run: |
+       echo "JAVA_TEST_PATH=${JAVA_HOME_17_X64}" >> $GITHUB_ENV
+     if: matrix.java == '17'
    - name: Run unit tests
      run: |
-       GRADLE_JVM_PATH=${JAVA_HOME_11_s390x}
-       JAVA_BUILD_PATH=${JAVA_HOME_11_s390x}
-       JAVA_BUILD_VERSION=11 # Use jdk 21 for build
+       GRADLE_JVM_PATH=${JAVA_HOME_8_X64}
+       JAVA_BUILD_PATH=${JAVA_HOME_8_X64}
+       JAVA_BUILD_VERSION=8 # Use jdk 8 for build
        JAVA_TEST_VERSION=${{ matrix.java }}
        cp gradlew gradlewStrict
        sed -e 's/JAVA_HOME/GRADLE_JVM/g' -i.back gradlewStrict
@@ -134,9 +135,9 @@ jobs:
          -PcompileJVMVer=${JAVA_BUILD_VERSION} \
          -PtestJVM=${JAVA_TEST_PATH} \
          -PtestJVMVer=${JAVA_TEST_VERSION} \
-         #-PtestJava21Home=${JAVA_HOME_21_s390x} \
-         -PtestJava11Home=${JAVA_HOME_11_s390x} \
-         #-PtestJava17Home=${JAVA_HOME_17_s390x} \
+         -PtestJava8Home=${JAVA_HOME_8_X64} \
+         -PtestJava11Home=${JAVA_HOME_11_X64} \
+         -PtestJava17Home=${JAVA_HOME_17_X64} \
          test --console=plain --no-daemon
    - uses: actions/upload-artifact@v3
      if: failure()
@@ -149,9 +150,9 @@ jobs:
      needs: [apiCheck, unitTest]
      strategy:
        matrix:
-         os: [self-hosted]
-         distribution: ['temurin']
-         java: ['11']
+         os: [ubuntu-latest]
+         distribution: ['liberica']
+         java: ['8']
      runs-on: ${{ matrix.os }}
      env:
        GRADLE_ENTERPRISE_ACCESS_KEY: ${{ secrets.GE_ACCESS_TOKEN }}
@@ -162,16 +163,16 @@ jobs:
        with:
          distribution: ${{ matrix.distribution }}
          java-version: |
-           #21
+           8
            11
-           #17
+           17
      - name: Setup Gradle
        uses: gradle/gradle-build-action@v2
      - name: Run integration tests
        run: |
-         GRADLE_JVM_PATH=${JAVA_HOME_11_s390x}
-         JAVA_BUILD_PATH=${JAVA_HOME_11_s390x}
-         JAVA_BUILD_VERSION=11
+         GRADLE_JVM_PATH=${JAVA_HOME_8_X64}
+         JAVA_BUILD_PATH=${JAVA_HOME_8_X64}
+         JAVA_BUILD_VERSION=8
          JAVA_TEST_VERSION=${{ matrix.java }}
          cp gradlew gradlewStrict
          sed -e 's/JAVA_HOME/GRADLE_JVM/g' -i.back gradlewStrict
@@ -183,9 +184,9 @@ jobs:
            -PcompileJVMVer=${JAVA_BUILD_VERSION} \
            -PtestJVM=${JAVA_TEST_PATH} \
            -PtestJVMVer=${JAVA_TEST_VERSION} \
-           #-PtestJava21Home=${JAVA_HOME_21_s390x} \
-           -PtestJava11Home=${JAVA_HOME_11_s390x} \
-           #-PtestJava17Home=${JAVA_HOME_17_s390x} \
+           -PtestJava8Home=${JAVA_HOME_8_X64} \
+           -PtestJava11Home=${JAVA_HOME_11_X64} \
+           -PtestJava17Home=${JAVA_HOME_17_X64} \
            integrationTest --console=plain --no-daemon
      - uses: actions/upload-artifact@v3
        if: failure()
@@ -198,9 +199,9 @@ jobs:
     needs: [apiCheck, unitTest]
     strategy:
       matrix:
-        os: [self-hosted]
-        distribution: ['temurin']
-        java: ['11']
+        os: [ubuntu-latest]
+        distribution: ['liberica']
+        java: ['8']
     runs-on: ${{ matrix.os }}
     env:
       GRADLE_ENTERPRISE_ACCESS_KEY: ${{ secrets.GE_ACCESS_TOKEN }}
@@ -215,10 +216,10 @@ jobs:
         uses: gradle/gradle-build-action@v2
       - name: Run acceptance tests
         run: |
-          GRADLE_JVM_PATH=${JAVA_HOME_11_s390x}
-          JAVA_BUILD_PATH=${JAVA_HOME_11_s390x}
-          JAVA_BUILD_VERSION=11
-          JAVA_TEST_VERSION=11
+          GRADLE_JVM_PATH=${JAVA_HOME_8_X64}
+          JAVA_BUILD_PATH=${JAVA_HOME_8_X64}
+          JAVA_BUILD_VERSION=8
+          JAVA_TEST_VERSION=8
           cp gradlew gradlewStrict
           sed -e 's/JAVA_HOME/GRADLE_JVM/g' -i.back gradlewStrict
           GRADLE_JVM=${GRADLE_JVM_PATH} JAVA_TEST_PATH=${JAVA_TEST_PATH} ./gradlewStrict \
@@ -227,7 +228,7 @@ jobs:
             -PcompileJVMVer=${JAVA_BUILD_VERSION} \
             -PtestJVM=${JAVA_TEST_PATH} \
             -PtestJVMVer=${JAVA_TEST_VERSION} \
-            -PtestJava21Home=${JAVA_HOME_11_s390x} \
+            -PtestJava8Home=${JAVA_HOME_8_X64} \
             acceptanceTest --console=plain --no-daemon
       - uses: actions/upload-artifact@v3
         if: failure()
@@ -240,9 +241,9 @@ jobs:
     needs: [apiCheck, unitTest]
     strategy:
       matrix:
-        os: [self-hosted]
-        distribution: ['temurin']
-        java: ['11']
+        os: [ubuntu-latest]
+        distribution: ['liberica']
+        java: ['8']
     runs-on: ${{ matrix.os }}
     env:
       GRADLE_ENTERPRISE_ACCESS_KEY: ${{ secrets.GE_ACCESS_TOKEN }}
@@ -257,10 +258,10 @@ jobs:
         uses: gradle/gradle-build-action@v2
       - name: Run wan distributed tests
         run: |
-          GRADLE_JVM_PATH=${JAVA_HOME_11_s390x}
-          JAVA_BUILD_PATH=${JAVA_HOME_11_s390x}
-          JAVA_BUILD_VERSION=11
-          JAVA_TEST_VERSION=11
+          GRADLE_JVM_PATH=${JAVA_HOME_8_X64}
+          JAVA_BUILD_PATH=${JAVA_HOME_8_X64}
+          JAVA_BUILD_VERSION=8
+          JAVA_TEST_VERSION=8
           cp gradlew gradlewStrict
           sed -e 's/JAVA_HOME/GRADLE_JVM/g' -i.back gradlewStrict
           GRADLE_JVM=${GRADLE_JVM_PATH} JAVA_TEST_PATH=${JAVA_TEST_PATH} ./gradlewStrict \
@@ -271,7 +272,7 @@ jobs:
             -PcompileJVMVer=${JAVA_BUILD_VERSION} \
             -PtestJVM=${JAVA_TEST_PATH} \
             -PtestJVMVer=${JAVA_TEST_VERSION} \
-            -PtestJava21Home=${JAVA_HOME_11_s390x} \
+            -PtestJava8Home=${JAVA_HOME_8_X64} \
             geode-wan:distributedTest --console=plain --no-daemon
       - uses: actions/upload-artifact@v3
         if: failure()
@@ -284,9 +285,9 @@ jobs:
     needs: [apiCheck, unitTest]
     strategy:
       matrix:
-        os: [self-hosted]
-        distribution: ['temurin']
-        java: ['11']
+        os: [ubuntu-latest]
+        distribution: ['liberica']
+        java: ['8']
     runs-on: ${{ matrix.os }}
     env:
       GRADLE_ENTERPRISE_ACCESS_KEY: ${{ secrets.GE_ACCESS_TOKEN }}
@@ -301,10 +302,10 @@ jobs:
         uses: gradle/gradle-build-action@v2
       - name: Run cq distributed tests
         run: |
-          GRADLE_JVM_PATH=${JAVA_HOME_11_s390x}
-          JAVA_BUILD_PATH=${JAVA_HOME_11_s390x}
-          JAVA_BUILD_VERSION=11
-          JAVA_TEST_VERSION=11
+          GRADLE_JVM_PATH=${JAVA_HOME_8_X64}
+          JAVA_BUILD_PATH=${JAVA_HOME_8_X64}
+          JAVA_BUILD_VERSION=8
+          JAVA_TEST_VERSION=8
           cp gradlew gradlewStrict
           sed -e 's/JAVA_HOME/GRADLE_JVM/g' -i.back gradlewStrict
           GRADLE_JVM=${GRADLE_JVM_PATH} JAVA_TEST_PATH=${JAVA_TEST_PATH} ./gradlewStrict \
@@ -315,7 +316,7 @@ jobs:
             -PcompileJVMVer=${JAVA_BUILD_VERSION} \
             -PtestJVM=${JAVA_TEST_PATH} \
             -PtestJVMVer=${JAVA_TEST_VERSION} \
-            -PtestJava21Home=${JAVA_HOME_11_s390x} \
+            -PtestJava8Home=${JAVA_HOME_8_X64} \
             geode-cq:distributedTest --console=plain --no-daemon
       - uses: actions/upload-artifact@v3
         if: failure()
@@ -328,9 +329,9 @@ jobs:
     needs: [apiCheck, unitTest]
     strategy:
       matrix:
-        os: [self-hosted]
-        distribution: ['temurin']
-        java: ['11']
+        os: [ubuntu-latest]
+        distribution: ['liberica']
+        java: ['8']
     runs-on: ${{ matrix.os }}
     env:
       GRADLE_ENTERPRISE_ACCESS_KEY: ${{ secrets.GE_ACCESS_TOKEN }}
@@ -345,10 +346,10 @@ jobs:
         uses: gradle/gradle-build-action@v2
       - name: Run lucene distributed tests
         run: |
-          GRADLE_JVM_PATH=${JAVA_HOME_11_s390x}
-          JAVA_BUILD_PATH=${JAVA_HOME_11_s390x}
-          JAVA_BUILD_VERSION=11
-          JAVA_TEST_VERSION=11
+          GRADLE_JVM_PATH=${JAVA_HOME_8_X64}
+          JAVA_BUILD_PATH=${JAVA_HOME_8_X64}
+          JAVA_BUILD_VERSION=8
+          JAVA_TEST_VERSION=8
           cp gradlew gradlewStrict
           sed -e 's/JAVA_HOME/GRADLE_JVM/g' -i.back gradlewStrict
           GRADLE_JVM=${GRADLE_JVM_PATH} JAVA_TEST_PATH=${JAVA_TEST_PATH} ./gradlewStrict \
@@ -359,7 +360,7 @@ jobs:
             -PcompileJVMVer=${JAVA_BUILD_VERSION} \
             -PtestJVM=${JAVA_TEST_PATH} \
             -PtestJVMVer=${JAVA_TEST_VERSION} \
-            -PtestJava21Home=${JAVA_HOME_11_s390x} \
+            -PtestJava8Home=${JAVA_HOME_8_X64} \
             geode-lucene:distributedTest --console=plain --no-daemon
       - uses: actions/upload-artifact@v3
         if: failure()
@@ -372,9 +373,9 @@ jobs:
     needs: [apiCheck, unitTest]
     strategy:
       matrix:
-        os: [self-hosted]
-        distribution: ['temurin']
-        java: ['11']
+        os: [ubuntu-latest]
+        distribution: ['liberica']
+        java: ['8']
     runs-on: ${{ matrix.os }}
     env:
       GRADLE_ENTERPRISE_ACCESS_KEY: ${{ secrets.GE_ACCESS_TOKEN }}
@@ -389,10 +390,10 @@ jobs:
         uses: gradle/gradle-build-action@v2
       - name: Run gfsh, web-mgmt, web distributed tests
         run: |
-          GRADLE_JVM_PATH=${JAVA_HOME_11_s390x}
-          JAVA_BUILD_PATH=${JAVA_HOME_11_s390x}
-          JAVA_BUILD_VERSION=11
-          JAVA_TEST_VERSION=11
+          GRADLE_JVM_PATH=${JAVA_HOME_8_X64}
+          JAVA_BUILD_PATH=${JAVA_HOME_8_X64}
+          JAVA_BUILD_VERSION=8
+          JAVA_TEST_VERSION=8
           cp gradlew gradlewStrict
           sed -e 's/JAVA_HOME/GRADLE_JVM/g' -i.back gradlewStrict
           GRADLE_JVM=${GRADLE_JVM_PATH} JAVA_TEST_PATH=${JAVA_TEST_PATH} ./gradlewStrict \
@@ -402,7 +403,7 @@ jobs:
             -PcompileJVMVer=${JAVA_BUILD_VERSION} \
             -PtestJVM=${JAVA_TEST_PATH} \
             -PtestJVMVer=${JAVA_TEST_VERSION} \
-            #-PtestJava21Home=${JAVA_HOME_21_s390x} \
+            -PtestJava8Home=${JAVA_HOME_8_X64} \
             geode-gfsh:distributedTest \
             geode-web:distributedTest \
             geode-web-management:distributedTest --console=plain --no-daemon
@@ -418,9 +419,9 @@ jobs:
     needs: [ apiCheck, unitTest ]
     strategy:
       matrix:
-        os: [ self-hosted ]
-        distribution: [ 'temurin']
-        java: ['11']
+        os: [ ubuntu-latest ]
+        distribution: [ 'liberica' ]
+        java: [ '8' ]
     runs-on: ${{ matrix.os }}
     env:
       GRADLE_ENTERPRISE_ACCESS_KEY: ${{ secrets.GE_ACCESS_TOKEN }}
@@ -435,10 +436,10 @@ jobs:
         uses: gradle/gradle-build-action@v2
       - name: Run assembly, connectors, old-client, extensions distributed tests
         run: |
-          GRADLE_JVM_PATH=${JAVA_HOME_11_s390x}
-          JAVA_BUILD_PATH=${JAVA_HOME_11_s390x}
-          JAVA_BUILD_VERSION=11
-          JAVA_TEST_VERSION=11
+          GRADLE_JVM_PATH=${JAVA_HOME_8_X64}
+          JAVA_BUILD_PATH=${JAVA_HOME_8_X64}
+          JAVA_BUILD_VERSION=8
+          JAVA_TEST_VERSION=8
           cp gradlew gradlewStrict
           sed -e 's/JAVA_HOME/GRADLE_JVM/g' -i.back gradlewStrict
           GRADLE_JVM=${GRADLE_JVM_PATH} JAVA_TEST_PATH=${JAVA_TEST_PATH} ./gradlewStrict \
@@ -448,7 +449,7 @@ jobs:
             -PcompileJVMVer=${JAVA_BUILD_VERSION} \
             -PtestJVM=${JAVA_TEST_PATH} \
             -PtestJVMVer=${JAVA_TEST_VERSION} \
-            -PtestJava21Home=${JAVA_HOME_11_s390x} \
+            -PtestJava8Home=${JAVA_HOME_8_X64} \
             geode-assembly:distributedTest \
             geode-dunit:distributedTest \
             geode-connectors:distributedTest \
