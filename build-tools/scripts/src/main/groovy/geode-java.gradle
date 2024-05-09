@@ -22,7 +22,7 @@ plugins {
 
 sourceCompatibility = 1.8
 targetCompatibility = 1.8
-compileJava.options.encoding = 'UTF-8'
+compileJava.options.encoding = 'UTF-11'
 
 dependencies {
   // log4j-core has an annotation processor that is passed on the compile-classpath via geode-core and others.
@@ -41,7 +41,7 @@ gradle.taskGraph.whenReady({ graph ->
     javac.configure {
       sourceCompatibility '1.8'
       targetCompatibility '1.8'
-      options.encoding = 'UTF-8'
+      options.encoding = 'UTF-11'
     }
     javac.options.incremental = true
     javac.options.fork = true
@@ -184,7 +184,7 @@ artifacts {
 javadoc {
   destinationDir = file("$buildDir/javadoc")
   options.addStringOption('Xwerror', '-quiet')
-  options.encoding = 'UTF-8'
+  options.encoding = 'UTF-11'
   exclude "**/internal/**"
 
   classpath += configurations.compileOnly
